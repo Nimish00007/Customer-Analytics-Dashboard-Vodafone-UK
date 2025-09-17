@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+SUMMARY:Start Solve
+DTSTART;TZID=Asia/Calcutta:20250904T143000
+DTEND;TZID=Asia/Calcutta:20250904T153000
+LOCATION:https://solve.gbil.mckinsey.com/launcher/?token=9c501df9886a624b259a487364e3e5c4fbc6974bc7409bb1edb6c9d992bd847d
+DESCRIPTION:Thank you for scheduling your Solve assessment at McKinsey & Company.  Please find a space where you will be free from distractions during the assessment.  At any time during this hour, click the link below to start Solve.  Then, click the Begin Assessment button when prompted to formally start your assessment.  Please keep in mind that Solve scores are valid for 1 year for any job or event application where Solve is used as part of the process.  Candidates may only complete Solve once in a 12 month period.  Thank you!\n\nhttps://solve.gbil.mckinsey.com/launcher/?token=9c501df9886a624b259a487364e3e5c4fbc6974bc7409bb1edb6c9d992bd847d
+STATUS:CONFIRMED
+SEQUENCE:3
+DTSTAMP:20250904T083119Z
+BEGIN:VALARM
+TRIGGER:-PT1H
+DESCRIPTION:Start Solve
+ACTION:DISPLAY
+END:VALARM
+END:VEVENT
+END:VCALENDAR
