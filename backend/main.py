@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import pickle
+import os
 from preprocess import preprocess_text
 from sentiment import predict_sentiment
 
@@ -11,30 +13,61 @@ with open("models/sentiment_model.pkl", "rb") as f:
 
 app = FastAPI(title="Customer Experience Analytics Dashboard")
 
+# --- CORS setup ---
+origins = [
+    "http://localhost:5173",   # Vite dev server
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # or ["*"] for testing only
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Pydantic model for input ---
 class Feedback(BaseModel):
     text: str
 
+# --- API routes ---
 @app.post("/analyze/")
 def analyze_feedback(feedback: Feedback):
     """
-    Takes customer feedback, predicts sentiment, and summarizes text (simple version).
+    Takes customer feedback, predicts sentiment, and summarizes text.
     """
-    # Preprocess and predict sentiment
-    processed_text = preprocess_text(feedback.text)
-    sentiment = predict_sentiment(processed_text, model, vectorizer, encoder)
+    try:
+        processed_text = preprocess_text(feedback.text)
+        sentiment = predict_sentiment(processed_text, model, vectorizer, encoder)
 
-    # Simple summary = truncate feedback (you can enhance later)
-    summary = feedback.text.split(".")[0]
+        # Simple summary = first sentence
+        summary = feedback.text.split(".")[0]
 
-    return {"feedback": feedback.text, "sentiment": sentiment, "summary": summary}
-
+        return {"feedback": feedback.text, "sentiment": sentiment, "summary": summary}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/dataset/")
 def get_dataset():
     """
     Returns dataset feedback with predicted sentiments for dashboard.
     """
-    df = pd.read_csv("../dataset/feedback.csv")
-    df["processed"] = df["feedback"].apply(preprocess_text)
-    df["sentiment"] = df["processed"].apply(lambda x: predict_sentiment(x, model, vectorizer, encoder))
-    return df.to_dict(orient="records")
+    try:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        DATASET_PATH = os.path.join(BASE_DIR, "..", "dataset", "vodafone_feedbacks.csv")
+
+        df = pd.read_csv(DATASET_PATH)
+
+        if "Feedback" not in df.columns:
+            return {"error": f"CSV missing 'Feedback' column. Found: {list(df.columns)}"}
+
+        # Keep original Sentiment column if present
+        df["processed"] = df["Feedback"].apply(preprocess_text)
+        df["predicted_sentiment"] = df["processed"].apply(
+            lambda x: predict_sentiment(x, model, vectorizer, encoder)
+        )
+
+        return df.to_dict(orient="records")
+    except Exception as e:
+        return {"error": str(e)}
